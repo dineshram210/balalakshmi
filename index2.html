@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BALALAKSHMI V — AI Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@100;300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --neon-blue:#00d4ff;
+  --neon-cyan:#00fff7;
+  --neon-purple:#b400ff;
+  --neon-pink:#ff00c8;
+  --silver:#c0cfe0;
+  --dark:#020b18;
+  --darker:#010810;
+  --glass:rgba(0,212,255,0.06);
+  --glass-border:rgba(0,212,255,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--darker);color:var(--silver);font-family:'Exo 2',sans-serif;overflow-x:hidden}
+
+/* ─── LOADING SCREEN ─── */
+#loader{position:fixed;inset:0;background:var(--darker);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
+#loader.hide{opacity:0;pointer-events:none}
+.loader-ring{width:120px;height:120px;border:3px solid transparent;border-top-color:var(--neon-blue);border-right-color:var(--neon-cyan);border-radius:50%;animation:spin 1s linear infinite;position:relative}
+.loader-ring::before{content:'';position:absolute;inset:10px;border:2px solid transparent;border-bottom-color:var(--neon-purple);border-radius:50%;animation:spin 1.5s linear infinite reverse}
+.loader-text{font-family:'Orbitron',monospace;color:var(--neon-cyan);letter-spacing:.3em;margin-top:24px;animation:pulse 1s ease infinite;font-size:.85rem}
+.loader-bar{width:200px;height:2px;background:rgba(0,212,255,0.15);margin-top:20px;border-radius:2px;overflow:hidden}
+.loader-fill{height:100%;width:0;background:linear-gradient(90deg,var(--neon-purple),var(--neon-blue),var(--neon-cyan));border-radius:2px;animation:load 2s ease forwards}
+@keyframes load{to{width:100%}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* ─── CANVAS BACKGROUND ─── */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ─── NAV ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,11,24,0.7);backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border)}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--neon-cyan);letter-spacing:.15em;text-shadow:0 0 20px var(--neon-cyan)}
+.nav-links{display:flex;gap:32px}
+.nav-links a{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:600;color:var(--silver);text-decoration:none;letter-spacing:.1em;text-transform:uppercase;transition:.3s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--neon-cyan);transition:.3s}
+.nav-links a:hover{color:var(--neon-cyan);text-shadow:0 0 10px var(--neon-cyan)}
+.nav-links a:hover::after{width:100%}
+.nav-toggle{display:none;flex-direction:column;gap:5px;cursor:pointer}
+.nav-toggle span{display:block;width:24px;height:2px;background:var(--neon-cyan)}
+
+/* ─── HERO ─── */
+#hero{min-height:100vh;display:flex;align-items:center;position:relative;z-index:1;padding:100px 40px 60px}
+.hero-inner{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;width:100%;gap:40px}
+.hero-text{flex:1}
+.hero-eyebrow{font-family:'Share Tech Mono',monospace;color:var(--neon-cyan);font-size:.8rem;letter-spacing:.4em;text-transform:uppercase;margin-bottom:16px;opacity:.8}
+.hero-name{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(2.2rem,5vw,4.2rem);line-height:1.05;background:linear-gradient(135deg,var(--neon-cyan),var(--neon-blue),var(--neon-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(0,212,255,0.5))}
+.hero-title{font-family:'Rajdhani',sans-serif;font-size:clamp(1rem,2vw,1.35rem);color:var(--silver);margin-top:12px;letter-spacing:.08em;line-height:1.6}
+.hero-title span{color:var(--neon-cyan)}
+.hero-cta{display:flex;gap:16px;margin-top:36px;flex-wrap:wrap}
+.btn{font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;cursor:pointer;border:none;transition:.3s;position:relative;overflow:hidden}
+.btn-primary{background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));color:#fff;box-shadow:0 0 25px rgba(0,212,255,.4)}
+.btn-primary:hover{box-shadow:0 0 45px rgba(0,212,255,.7);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--neon-cyan);border:1px solid var(--neon-cyan)}
+.btn-outline:hover{background:rgba(0,212,255,.1);box-shadow:0 0 25px rgba(0,212,255,.3);transform:translateY(-2px)}
+
+/* ─── ROBOT ─── */
+.robot-container{flex:0 0 420px;max-width:420px;position:relative;cursor:pointer;filter:drop-shadow(0 0 40px rgba(0,212,255,.35))}
+.robot-wrapper{animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-.5deg)}50%{transform:translateY(-20px) rotate(.5deg)}}
+.robot-svg{width:100%;height:auto}
+
+/* ─── HOLOGRAPHIC PANEL ─── */
+#holo-panel{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(2,11,24,.85);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .4s}
+#holo-panel.open{opacity:1;pointer-events:all}
+.holo-box{border:1px solid var(--neon-cyan);border-radius:8px;padding:50px 60px;text-align:center;position:relative;background:rgba(0,20,40,.7);box-shadow:0 0 60px rgba(0,212,255,.3),inset 0 0 60px rgba(0,212,255,.04);max-width:520px;width:90%;animation:holo-appear .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes holo-appear{from{transform:scale(.7) rotateX(20deg);opacity:0}to{transform:scale(1) rotateX(0);opacity:1}}
+.holo-corner{position:absolute;width:20px;height:20px;border-color:var(--neon-cyan);border-style:solid}
+.holo-corner.tl{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.holo-corner.tr{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.holo-corner.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px}
+.holo-corner.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.holo-title{font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,var(--neon-cyan),var(--neon-blue),var(--neon-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.12em;margin-bottom:12px}
+.holo-sub{font-family:'Share Tech Mono',monospace;color:var(--neon-cyan);font-size:.8rem;letter-spacing:.3em;opacity:.7;margin-bottom:24px}
+.holo-speech{font-family:'Rajdhani',sans-serif;color:var(--silver);font-size:1rem;line-height:1.7;margin-bottom:28px;border-left:2px solid var(--neon-cyan);padding-left:16px;text-align:left}
+.holo-close{font-family:'Orbitron',monospace;font-size:.7rem;cursor:pointer;color:var(--neon-pink);border:1px solid var(--neon-pink);padding:8px 20px;background:transparent;border-radius:3px;letter-spacing:.15em;transition:.3s}
+.holo-close:hover{background:rgba(255,0,200,.1);box-shadow:0 0 20px rgba(255,0,200,.4)}
+.scan-line{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--neon-cyan),transparent);animation:scan 3s linear infinite}
+@keyframes scan{0%{top:0}100%{top:100%}}
+
+/* ─── SECTIONS ─── */
+section{position:relative;z-index:1;padding:100px 40px}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-tag{font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.4em;color:var(--neon-cyan);text-transform:uppercase;margin-bottom:12px;opacity:.7}
+.section-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(1.8rem,3.5vw,2.8rem);background:linear-gradient(135deg,#fff,var(--neon-cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:48px}
+.divider{width:80px;height:2px;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));margin:20px 0 48px;border-radius:2px}
+
+/* ─── GLASS CARD ─── */
+.glass-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:32px;backdrop-filter:blur(12px);transition:transform .3s,box-shadow .3s;position:relative;overflow:hidden}
+.glass-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,.04),transparent);opacity:0;transition:.3s}
+.glass-card:hover{transform:translateY(-6px) rotateX(2deg);box-shadow:0 20px 60px rgba(0,212,255,.2),0 0 0 1px rgba(0,212,255,.3)}
+.glass-card:hover::before{opacity:1}
+
+/* ─── ABOUT ─── */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.about-text{font-family:'Rajdhani',sans-serif;font-size:1.1rem;line-height:1.85;color:var(--silver)}
+.about-text strong{color:var(--neon-cyan)}
+.info-list{list-style:none;margin-top:24px}
+.info-list li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(0,212,255,.1);font-family:'Rajdhani',sans-serif;font-size:1rem}
+.info-list li .key{color:var(--neon-cyan);font-weight:700;min-width:140px;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase}
+
+/* ─── FAMILY ─── */
+.family-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.family-card{text-align:center;padding:36px 24px}
+.family-icon{font-size:2.8rem;margin-bottom:16px;display:block;filter:drop-shadow(0 0 12px var(--neon-cyan))}
+.family-role{font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--neon-cyan);letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+.family-name{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:#fff}
+
+/* ─── EDUCATION TIMELINE ─── */
+.timeline{position:relative;padding-left:32px}
+.timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(180deg,var(--neon-cyan),var(--neon-purple),transparent)}
+.timeline-item{position:relative;margin-bottom:40px;padding-left:24px}
+.timeline-item::before{content:'';position:absolute;left:-37px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--neon-cyan);box-shadow:0 0 15px var(--neon-cyan)}
+.t-year{font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--neon-cyan);letter-spacing:.2em;margin-bottom:6px}
+.t-school{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px}
+.t-detail{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--silver);opacity:.8}
+
+/* ─── ACADEMIC PROGRESS ─── */
+.progress-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:16px}
+.progress-card{text-align:center;padding:36px 24px}
+.circ-wrap{position:relative;width:130px;height:130px;margin:0 auto 20px}
+.circ-bg{fill:none;stroke:rgba(0,212,255,.1);stroke-width:8}
+.circ-fg{fill:none;stroke-width:8;stroke-linecap:round;transform-origin:center;transform:rotate(-90deg);stroke-dasharray:339.3;stroke-dashoffset:339.3;transition:stroke-dashoffset 2s ease}
+.circ-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-weight:900;font-size:1.25rem;color:#fff}
+.p-label{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--silver);margin-bottom:4px}
+.p-score{font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--neon-cyan);opacity:.8}
+
+/* ─── SKILLS ─── */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.skill-chip{display:flex;align-items:center;gap:14px;padding:18px 22px;border:1px solid var(--glass-border);border-radius:8px;background:var(--glass);backdrop-filter:blur(10px);transition:.3s;cursor:default}
+.skill-chip:hover{border-color:var(--neon-cyan);box-shadow:0 0 20px rgba(0,212,255,.25);transform:translateX(4px)}
+.skill-dot{width:10px;height:10px;border-radius:50%;background:var(--neon-cyan);flex-shrink:0;box-shadow:0 0 8px var(--neon-cyan)}
+.skill-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:1rem;letter-spacing:.05em}
+
+/* ─── ACHIEVEMENTS ─── */
+.achiev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.achiev-card{padding:30px}
+.achiev-icon{font-size:2.2rem;margin-bottom:16px;display:block}
+.achiev-title{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:#fff;margin-bottom:8px}
+.achiev-desc{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--silver);opacity:.85;line-height:1.6}
+
+/* ─── HOBBIES ─── */
+.hobby-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:32px;max-width:640px}
+.hobby-card{text-align:center;padding:44px 32px;cursor:pointer;position:relative}
+.hobby-emoji{font-size:3.5rem;display:block;margin-bottom:16px;transition:.3s;filter:drop-shadow(0 0 0 transparent)}
+.hobby-card:hover .hobby-emoji{filter:drop-shadow(0 0 16px var(--neon-cyan));transform:scale(1.2)}
+.hobby-label{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;color:#fff;margin-bottom:8px}
+.hobby-sub{font-family:'Rajdhani',sans-serif;font-size:.85rem;color:var(--silver);opacity:.7}
+.hobby-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:.3s;pointer-events:none;font-size:4rem}
+.hobby-card.playing .hobby-anim{opacity:1}
+.hobby-card.playing .hobby-emoji{opacity:0}
+
+/* ─── FOOD ─── */
+.food-section{display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
+.food-card{width:220px;height:220px;perspective:600px;cursor:pointer}
+.food-inner{width:100%;height:100%;transition:transform .8s;transform-style:preserve-3d;position:relative}
+.food-card:hover .food-inner{transform:rotateY(180deg)}
+.food-front,.food-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(12px)}
+.food-back{transform:rotateY(180deg);background:rgba(0,30,60,.8)}
+.food-emoji{font-size:4rem;margin-bottom:12px;filter:drop-shadow(0 0 16px rgba(0,212,255,.5))}
+.food-label{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--neon-cyan)}
+.food-back p{font-family:'Rajdhani',sans-serif;font-size:.9rem;color:var(--silver);text-align:center;padding:16px;line-height:1.6}
+
+/* ─── CONTACT ─── */
+.contact-wrap{display:flex;justify-content:center}
+.contact-box{max-width:500px;width:100%;text-align:center;padding:56px 48px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass);backdrop-filter:blur(12px);position:relative;overflow:hidden}
+.contact-box::after{content:'';position:absolute;inset:-1px;background:linear-gradient(135deg,var(--neon-cyan),transparent,var(--neon-purple));border-radius:12px;z-index:-1;opacity:.4}
+.contact-name{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;color:#fff;margin-bottom:8px}
+.contact-role{font-family:'Rajdhani',sans-serif;color:var(--neon-cyan);font-size:1rem;margin-bottom:32px;letter-spacing:.1em}
+.contact-msg{font-family:'Rajdhani',sans-serif;color:var(--silver);line-height:1.75;margin-bottom:32px}
+
+/* ─── FOOTER ─── */
+footer{position:relative;z-index:1;text-align:center;padding:40px;border-top:1px solid var(--glass-border);background:rgba(1,8,16,.6)}
+.footer-text{font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--silver);letter-spacing:.2em;opacity:.6}
+.footer-brand{font-family:'Orbitron',monospace;font-size:.9rem;color:var(--neon-cyan);margin-top:8px;font-weight:700}
+
+/* ─── MOUSE FOLLOWER ─── */
+#cursor-glow{position:fixed;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.06),transparent 70%);pointer-events:none;z-index:2;transform:translate(-50%,-50%);transition:transform .1s}
+
+/* ─── TYPING ─── */
+.typing-wrap{overflow:hidden;display:inline}
+.typing-cursor{display:inline-block;width:2px;height:1em;background:var(--neon-cyan);animation:blink .7s step-end infinite;vertical-align:text-bottom;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  nav{padding:16px 20px}
+  .nav-links{display:none}
+  .nav-links.open{display:flex;flex-direction:column;position:fixed;top:70px;left:0;right:0;background:rgba(2,11,24,.97);padding:24px;gap:20px;border-bottom:1px solid var(--glass-border)}
+  .nav-toggle{display:flex}
+  .hero-inner{flex-direction:column-reverse;text-align:center}
+  .robot-container{max-width:260px;flex:none}
+  .hero-cta{justify-content:center}
+  .about-grid{grid-template-columns:1fr}
+  .family-grid{grid-template-columns:1fr}
+  .progress-grid{grid-template-columns:1fr}
+  .hobby-grid{grid-template-columns:1fr;max-width:320px}
+  section{padding:70px 20px}
+  .holo-box{padding:36px 28px}
+  .holo-title{font-size:1.6rem}
+}
+@media(max-width:600px){
+  .skills-grid{grid-template-columns:1fr}
+  .achiev-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">INITIALIZING AI SYSTEM...</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
+
+<!-- CURSOR GLOW -->
+<div id="cursor-glow"></div>
+
+<!-- BACKGROUND CANVAS -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- HOLOGRAPHIC PANEL -->
+<div id="holo-panel">
+  <div class="holo-box">
+    <div class="scan-line"></div>
+    <div class="holo-corner tl"></div>
+    <div class="holo-corner tr"></div>
+    <div class="holo-corner bl"></div>
+    <div class="holo-corner br"></div>
+    <div class="holo-sub">PORTFOLIO SYSTEM • AI AGENT</div>
+    <div class="holo-title">BALALAKSHMI V</div>
+    <p class="holo-speech" id="holo-text">Hello! Welcome to the portfolio of Balalakshmi V. She is currently pursuing B.Sc Artificial Intelligence and Data Science First Year at RD National College of Arts and Science.</p>
+    <button class="holo-close" onclick="closeHolo()">[ CLOSE PANEL ]</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">BVAI</div>
+  <div class="nav-links" id="nav-links">
+    <a href="#hero">Home</a>
+    <a href="#about">About</a>
+    <a href="#education">Education</a>
+    <a href="#skills">Skills</a>
+    <a href="#achievements">Achievements</a>
+    <a href="#hobbies">Hobbies</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="nav-toggle" onclick="toggleNav()" id="nav-toggle">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-eyebrow">// AI PORTFOLIO SYSTEM v2.0</div>
+      <h1 class="hero-name">BALALAKSHMI V</h1>
+      <div class="hero-title">
+        <span id="typed-title"></span><span class="typing-cursor"></span>
+      </div>
+      <div class="hero-cta">
+        <a href="#about" class="btn btn-primary">EXPLORE PROFILE</a>
+        <a href="#contact" class="btn btn-outline">ESTABLISH CONTACT</a>
+      </div>
+    </div>
+
+    <!-- 3D SVG ROBOT -->
+    <div class="robot-container" onclick="openHolo()" title="Click me!">
+      <div class="robot-wrapper">
+        <svg class="robot-svg" viewBox="0 0 340 480" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="bodyGrad" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#1a3a5c"/>
+              <stop offset="100%" stop-color="#050f1e"/>
+            </radialGradient>
+            <radialGradient id="headGrad" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#1e4060"/>
+              <stop offset="100%" stop-color="#081525"/>
+            </radialGradient>
+            <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#00fff7"/>
+              <stop offset="60%" stop-color="#00d4ff"/>
+              <stop offset="100%" stop-color="#0066cc" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="strongGlow">
+              <feGaussianBlur stdDeviation="5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Neck -->
+          <rect x="148" y="145" width="44" height="30" rx="4" fill="#0d2035" stroke="#00d4ff" stroke-width=".5"/>
+          <line x1="160" y1="148" x2="160" y2="172" stroke="#00d4ff" stroke-width=".5" opacity=".4"/>
+          <line x1="170" y1="148" x2="170" y2="172" stroke="#00d4ff" stroke-width=".5" opacity=".4"/>
+          <line x1="180" y1="148" x2="180" y2="172" stroke="#00d4ff" stroke-width=".5" opacity=".4"/>
+
+          <!-- Head -->
+          <rect x="95" y="52" width="150" height="96" rx="14" fill="url(#headGrad)" stroke="#00d4ff" stroke-width="1.2"/>
+          <!-- Head detail lines -->
+          <line x1="95" y1="80" x2="245" y2="80" stroke="#00d4ff" stroke-width=".4" opacity=".3"/>
+          <line x1="95" y1="120" x2="245" y2="120" stroke="#00d4ff" stroke-width=".4" opacity=".3"/>
+          <!-- Antenna -->
+          <line x1="170" y1="52" x2="170" y2="28" stroke="#00d4ff" stroke-width="2"/>
+          <circle cx="170" cy="22" r="8" fill="#050f1e" stroke="#00d4ff" stroke-width="1.5"/>
+          <circle cx="170" cy="22" r="4" fill="#00fff7" filter="url(#strongGlow)">
+            <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <!-- Side ear pieces -->
+          <rect x="80" y="72" width="18" height="36" rx="5" fill="#0d2035" stroke="#00a8cc" stroke-width="1"/>
+          <rect x="242" y="72" width="18" height="36" rx="5" fill="#0d2035" stroke="#00a8cc" stroke-width="1"/>
+          <rect x="84" y="78" width="8" height="6" rx="2" fill="#00d4ff" opacity=".6"/>
+          <rect x="84" y="88" width="8" height="6" rx="2" fill="#00d4ff" opacity=".6"/>
+          <rect x="246" y="78" width="8" height="6" rx="2" fill="#00d4ff" opacity=".6"/>
+          <rect x="246" y="88" width="8" height="6" rx="2" fill="#00d4ff" opacity=".6"/>
+          <!-- Eyes -->
+          <ellipse cx="137" cy="90" rx="20" ry="14" fill="#021420" stroke="#00d4ff" stroke-width="1.5"/>
+          <ellipse cx="203" cy="90" rx="20" ry="14" fill="#021420" stroke="#00d4ff" stroke-width="1.5"/>
+          <ellipse cx="137" cy="90" rx="14" ry="9" fill="url(#eyeGlow)" filter="url(#strongGlow)">
+            <animate attributeName="ry" values="9;11;9" dur="3s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="203" cy="90" rx="14" ry="9" fill="url(#eyeGlow)" filter="url(#strongGlow)">
+            <animate attributeName="ry" values="9;11;9" dur="3s" repeatCount="indefinite"/>
+          </ellipse>
+          <circle cx="137" cy="90" r="5" fill="#fff" opacity=".9" filter="url(#glow)"/>
+          <circle cx="203" cy="90" r="5" fill="#fff" opacity=".9" filter="url(#glow)"/>
+          <!-- Eye blink -->
+          <rect x="117" y="76" width="40" height="0" rx="2" fill="#0d2035" stroke="none">
+            <animate attributeName="height" values="0;28;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.1;0.2" fill="freeze" calcMode="discrete"/>
+          </rect>
+          <rect x="183" y="76" width="40" height="0" rx="2" fill="#0d2035" stroke="none">
+            <animate attributeName="height" values="0;28;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.1;0.2" fill="freeze" calcMode="discrete"/>
+          </rect>
+          <!-- Mouth / speaker grill -->
+          <rect x="130" y="126" width="80" height="14" rx="4" fill="#021420" stroke="#00d4ff" stroke-width="1"/>
+          <line x1="136" y1="130" x2="136" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="144" y1="130" x2="144" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="152" y1="130" x2="152" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="160" y1="130" x2="160" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="168" y1="130" x2="168" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="176" y1="130" x2="176" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="184" y1="130" x2="184" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="192" y1="130" x2="192" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+          <line x1="200" y1="130" x2="200" y2="136" stroke="#00d4ff" stroke-width="1.5" opacity=".8"/>
+
+          <!-- Shoulders -->
+          <ellipse cx="80" cy="195" rx="34" ry="22" fill="#0d2035" stroke="#00a8cc" stroke-width="1.2"/>
+          <ellipse cx="260" cy="195" rx="34" ry="22" fill="#0d2035" stroke="#00a8cc" stroke-width="1.2"/>
+
+          <!-- Body -->
+          <rect x="95" y="172" width="150" height="140" rx="12" fill="url(#bodyGrad)" stroke="#00d4ff" stroke-width="1.2"/>
+          <!-- Body panel lines -->
+          <line x1="95" y1="210" x2="245" y2="210" stroke="#00d4ff" stroke-width=".5" opacity=".4"/>
+          <line x1="95" y1="272" x2="245" y2="272" stroke="#00d4ff" stroke-width=".5" opacity=".4"/>
+          <line x1="170" y1="172" x2="170" y2="312" stroke="#00d4ff" stroke-width=".5" opacity=".25"/>
+          <!-- Chest core reactor -->
+          <circle cx="170" cy="228" r="24" fill="#021420" stroke="#00d4ff" stroke-width="1.5"/>
+          <circle cx="170" cy="228" r="18" fill="#021420" stroke="#00a8cc" stroke-width="1"/>
+          <circle cx="170" cy="228" r="10" fill="#00fff7" filter="url(#strongGlow)" opacity=".9">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="9;12;9" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+          <!-- Body details -->
+          <rect x="112" y="275" width="26" height="8" rx="2" fill="#00d4ff" opacity=".3"/>
+          <rect x="142" y="275" width="16" height="8" rx="2" fill="#00d4ff" opacity=".5"/>
+          <rect x="202" y="275" width="26" height="8" rx="2" fill="#00d4ff" opacity=".3"/>
+          <rect x="182" y="275" width="16" height="8" rx="2" fill="#00d4ff" opacity=".5"/>
+
+          <!-- Left Arm -->
+          <rect x="46" y="190" width="34" height="110" rx="10" fill="#0d2035" stroke="#00a8cc" stroke-width="1">
+            <animateTransform attributeName="transform" type="rotate" values="-5 63 190;5 63 190;-5 63 190" dur="4s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="48" y="300" width="30" height="32" rx="8" fill="#0a1e30" stroke="#00d4ff" stroke-width="1">
+            <animateTransform attributeName="transform" type="rotate" values="-5 63 190;5 63 190;-5 63 190" dur="4s" repeatCount="indefinite"/>
+          </rect>
+
+          <!-- Right Arm -->
+          <rect x="260" y="190" width="34" height="110" rx="10" fill="#0d2035" stroke="#00a8cc" stroke-width="1">
+            <animateTransform attributeName="transform" type="rotate" values="5 277 190;-5 277 190;5 277 190" dur="4s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="262" y="300" width="30" height="32" rx="8" fill="#0a1e30" stroke="#00d4ff" stroke-width="1">
+            <animateTransform attributeName="transform" type="rotate" values="5 277 190;-5 277 190;5 277 190" dur="4s" repeatCount="indefinite"/>
+          </rect>
+
+          <!-- Waist/belt -->
+          <rect x="95" y="310" width="150" height="18" rx="5" fill="#081a2a" stroke="#00d4ff" stroke-width="1"/>
+          <rect x="160" y="312" width="20" height="14" rx="3" fill="#00d4ff" opacity=".3"/>
+
+          <!-- Legs -->
+          <rect x="108" y="326" width="50" height="100" rx="10" fill="#0d2035" stroke="#00a8cc" stroke-width="1"/>
+          <rect x="182" y="326" width="50" height="100" rx="10" fill="#0d2035" stroke="#00a8cc" stroke-width="1"/>
+          <!-- Knee joints -->
+          <circle cx="133" cy="370" r="10" fill="#081a2a" stroke="#00d4ff" stroke-width="1.2"/>
+          <circle cx="207" cy="370" r="10" fill="#081a2a" stroke="#00d4ff" stroke-width="1.2"/>
+          <!-- Feet -->
+          <rect x="104" y="422" width="60" height="22" rx="8" fill="#0a1e30" stroke="#00d4ff" stroke-width="1"/>
+          <rect x="176" y="422" width="60" height="22" rx="8" fill="#0a1e30" stroke="#00d4ff" stroke-width="1"/>
+
+          <!-- Click hint -->
+          <text x="170" y="470" text-anchor="middle" fill="#00d4ff" font-size="10" font-family="Share Tech Mono" opacity=".6">[ CLICK TO ACTIVATE ]</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════ ABOUT ═══════════════════════════════════ -->
+<section id="about">
+  <div class="section-inner">
+    <div class="section-tag">// MODULE_01</div>
+    <h2 class="section-title">ABOUT ME</h2>
+    <div class="divider"></div>
+    <div class="about-grid">
+      <div class="glass-card">
+        <p class="about-text">
+          I am <strong>Balalakshmi V</strong>, currently pursuing <strong>B.Sc Artificial Intelligence and Data Science (AIDS) First Year</strong> at <strong>RD National College of Arts and Science</strong>.<br><br>
+          I am passionate about <strong>Artificial Intelligence</strong>, technology, innovation, and software development. I love learning new technologies and creating innovative projects that push the boundaries of what's possible.
+        </p>
+        <ul class="info-list">
+          <li><span class="key">Date of Birth</span><span>08 December 2008</span></li>
+          <li><span class="key">Course</span><span>B.Sc AI & Data Science</span></li>
+          <li><span class="key">College</span><span>RD National College of Arts and Science</span></li>
+          <li><span class="key">Year</span><span>First Year</span></li>
+        </ul>
+      </div>
+      <div class="glass-card">
+        <div class="section-tag" style="margin-bottom:20px">// FAMILY UNIT</div>
+        <div class="family-grid" style="grid-template-columns:1fr;gap:16px">
+          <div class="glass-card" style="padding:20px;text-align:center">
+            <span class="family-icon">👨</span>
+            <div class="family-role">Father</div>
+            <div class="family-name">VENKATESH</div>
+          </div>
+          <div class="glass-card" style="padding:20px;text-align:center">
+            <span class="family-icon">👩</span>
+            <div class="family-role">Mother</div>
+            <div class="family-name">KIRUTHIKA</div>
+          </div>
+          <div class="glass-card" style="padding:20px;text-align:center">
+            <span class="family-icon">👦</span>
+            <div class="family-role">Brother</div>
+            <div class="family-name">ROHITH</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════ EDUCATION ═══════════════════════════════════ -->
+<section id="education">
+  <div class="section-inner">
+    <div class="section-tag">// MODULE_02</div>
+    <h2 class="section-title">EDUCATION TIMELINE</h2>
+    <div class="divider"></div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="t-year">LKG — 7TH STANDARD</div>
+        <div class="t-school">Kalaimagal Kalvi Nilayam Girls Higher Secondary School</div>
+        <div class="t-detail">Foundation years — building the base for a future in technology</div>
+      </div>
+      <div class="timeline-item">
+        <div class="t-year">8TH — 9TH STANDARD</div>
+        <div class="t-school">Government Model Higher Secondary School</div>
+        <div class="t-detail">Developed analytical thinking and scientific curiosity</div>
+      </div>
+      <div class="timeline-item">
+        <div class="t-year">10TH — 12TH STANDARD</div>
+        <div class="t-school">V.V.C.R. Murugesanar Sengunthar Girls Higher Secondary School</div>
+        <div class="t-detail">Excelled academically, setting the stage for higher education</div>
+      </div>
+      <div class="timeline-item">
+        <div class="t-year">CURRENT — FIRST YEAR</div>
+        <div class="t-school">RD National College of Arts and Science</div>
+        <div class="t-detail">B.Sc Artificial Intelligence and Data Science (AIDS) — Pursuing the future</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════ ACADEMIC ═══════════════════════════════════ -->
+<section id="academic">
+  <div class="section-inner">
+    <div class="section-tag">// MODULE_03</div>
+    <h2 class="section-title">ACADEMIC PERFORMANCE</h2>
+    <div class="divider"></div>
+    <div class="progress-grid">
+      <div class="glass-card progress-card">
+        <div class="circ-wrap">
+          <svg viewBox="0 0 120 120" width="130" height="130">
+            <circle class="circ-bg" cx="60" cy="60" r="54"/>
+            <circle class="circ-fg" cx="60" cy="60" r="54" stroke="#00d4ff" data-pct="83.6" style="stroke-dashoffset:339.3"/>
+          </svg>
+          <div class="circ-pct">83.6%</div>
+        </div>
+        <div class="p-label">10th Standard</div>
+        <div class="p-score">418 / 500</div>
+      </div>
+      <div class="glass-card progress-card">
+        <div class="circ-wrap">
+          <svg viewBox="0 0 120 120" width="130" height="130">
+            <circle class="circ-bg" cx="60" cy="60" r="54"/>
+            <circle class="circ-fg" cx="60" cy="60" r="54" stroke="#b400ff" data-pct="72.17" style="stroke-dashoffset:339.3"/>
+          </svg>
+          <div class="circ-pct">72.2%</div>
+        </div>
+        <div class="p-label">11th Standard</div>
+        <div class="p-score">433 / 600</div>
+      </div>
+      <div class="glass-card progress-card">
+        <div class="circ-wrap">
+          <svg viewBox="0 0 120 120" width="130" height="130">
+            <circle class="circ-bg" cx="60" cy="60" r="54"/>
+            <circle class="circ-fg" cx="60" cy="60" r="54" stroke="#00fff7" data-pct="77.5" style="stroke-dashoffset:339.3"/>
+          </svg>
+          <div class="circ-pct">77.5%</div>
+        </div>
+        <div class="p-label">12th Standard</div>
+        <div class="p-score">465 / 600</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════ SKILLS ═══════════════════════════════════ -->
+<section id="skills">
+  <div class="section-inner">
+    <div class="section-tag">// MODULE_04</div>
+    <h2 class="section-title">SKILL MATRIX</h2>
+    <div class="divider"></div>
+    <div class="skills-grid">
+      <div class="skill-chip"><div class="skill-dot" style="background:#00d4ff;box-shadow:0 0 8px #00d4ff"></div><span class="skill-name">Artificial Intelligence</span></div>
+      <div class="skill-chip"><div class="skill-dot" style="background:#00fff7;box-shadow:0 0 8px #00fff7"></div><span class="skill-name">Data Science</span></div>
+      <div class="skill-chip"><div class="skill-dot" style="background:#b400ff;box-shadow:0 0 8px #b400ff"></div><span class="skill-name">Problem Solving</span></div>
+      <div class="skill-chip"><div class="skill-dot" style="background:#ff00c8;box-shadow:0 0 8px #ff00c8"></div><span class="skill-name">Creativity</span></div>
+      <div class="skill-chip"><div class="skill-dot" style="background:#00d4ff;box-shadow:0 0 8px #00d4ff"></div><span class="skill-name">Communication</span></div>
+      <div class="skill-chip"><div class="skill-dot" style="background:#00fff7;box-shadow:0 0 8px #00fff7"></div><span class="skill-name">Teamwork</span></div>
+      <div class="skill-chip"><div class="skill-dot" style="background:#b400ff;box-shadow:0 0 8px #b400ff"></div><span class="skill-name">Technology Enthusiast</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════ ACHIEVEMENTS ═══════════════════════════════════ -->
+<section id="achievements">
+  <div class="section-inner">
+    <div class="section-tag">// MODULE_05</div>
+    <h2 class="section-title">ACHIEVEMENTS</h2>
+    <div class="divider"></div>
+    <div class="achiev-grid">
+      <div class="glass-card achiev-card">
+        <span class="achiev-icon">🏆</span>
+        <div class="achiev-title">Most Promising Developer Award</div>
+        <div class="achiev-desc">Recognized as the most promising developer — a testament to exceptional talent, creativity, and drive to innovate.</div>
+      </div>
+      <div class="glass-card achiev-card">
+        <span class="achiev-icon">⌨️</span>
+        <div class="achiev-title">Built Custom Keyboard</div>
+        <div class="achiev-desc">Designed and assembled a fully custom mechanical keyboard — proof of hands-on engineering skill and technical passion.</div>
+      </div>
+      <div class="glass-card achiev-card">
+        <span class="achiev-icon">🤝</span>
+        <div class="achiev-title">NSS Member</div>
+        <div class="achiev-desc">Active NSS Member during school days — participated in social service and community development activities, demonstrating leadership and responsibility.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════ HOBBIES ═══════════════════════════════════ -->
+<section id="hobbies">
+  <div class="section-inner">
+    <div class="section-tag">// MODULE_06</div>
+    <h2 class="section-title">HOBBIES & INTERESTS</h2>
+    <div class="divider"></div>
+    <div class="hobby-grid">
+      <div class="glass-card hobby-card" id="cricket-card" onclick="toggleHobby('cricket')">
+        <span class="hobby-emoji">🏏</span>
+        <div class="hobby-anim" id="cricket-anim">🏏💥⚡🎯🏏</div>
+        <div class="hobby-label">CRICKET</div>
+        <div class="hobby-sub">Tap to activate</div>
+      </div>
+      <div class="glass-card hobby-card" id="shuttle-card" onclick="toggleHobby('shuttle')">
+        <span class="hobby-emoji">🏸</span>
+        <div class="hobby-anim" id="shuttle-anim">🏸✨🌟🏸✨</div>
+        <div class="hobby-label">SHUTTLECOCK</div>
+        <div class="hobby-sub">Tap to activate</div>
+      </div>
+    </div>
+
+    <!-- Favorite Food -->
+    <div style="margin-top:60px">
+      <div class="section-tag" style="margin-bottom:20px">// FAVORITE FOOD</div>
+      <div class="food-section">
+        <div class="food-card">
+          <div class="food-inner">
+            <div class="food-front glass-card">
+              <div class="food-emoji">🥞</div>
+              <div class="food-label">DOSA</div>
+            </div>
+            <div class="food-back">
+              <div class="food-emoji">🥞</div>
+              <p>Dosa — the classic South Indian crispy crepe. Light, delicious, and the ultimate fuel for a future AI developer!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════ CONTACT ═══════════════════════════════════ -->
+<section id="contact">
+  <div class="section-inner">
+    <div class="section-tag">// MODULE_07</div>
+    <h2 class="section-title">CONTACT</h2>
+    <div class="divider"></div>
+    <div class="contact-wrap">
+      <div class="contact-box">
+        <div class="contact-name">BALALAKSHMI V</div>
+        <div class="contact-role">B.Sc AI & Data Science • First Year</div>
+        <div class="contact-msg">
+          I am an aspiring AI developer and data science student, always open to collaborations, projects, and opportunities to learn and grow in the world of technology.
+        </div>
+        <a href="mailto:" class="btn btn-primary" style="display:inline-block">SEND MESSAGE</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-text">© 2024 ALL SYSTEMS OPERATIONAL</div>
+  <div class="footer-brand">Designed and Developed by BALALAKSHMI V</div>
+</footer>
+
+<script>
+// ─── LOADER ───
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('hide');
+    setTimeout(()=>document.getElementById('loader').remove(),1000);
+  },2400);
+});
+
+// ─── NAV TOGGLE ───
+function toggleNav(){
+  document.getElementById('nav-links').classList.toggle('open');
+}
+document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>{
+  document.getElementById('nav-links').classList.remove('open');
+}));
+
+// ─── MOUSE CURSOR GLOW ───
+const cursor=document.getElementById('cursor-glow');
+document.addEventListener('mousemove',e=>{
+  cursor.style.left=e.clientX+'px';
+  cursor.style.top=e.clientY+'px';
+});
+
+// ─── TYPING ANIMATION ───
+const phrases=['Future AI Developer','Data Science Student','Tech Enthusiast','Innovation Builder'];
+let pi=0,ci=0,del=false;
+const typed=document.getElementById('typed-title');
+function typeAnim(){
+  const phrase=phrases[pi];
+  if(!del){
+    typed.textContent=phrase.slice(0,ci+1);
+    ci++;
+    if(ci===phrase.length){del=true;setTimeout(typeAnim,2000);return;}
+    setTimeout(typeAnim,80);
+  } else {
+    typed.textContent=phrase.slice(0,ci-1);
+    ci--;
+    if(ci===0){del=false;pi=(pi+1)%phrases.length;setTimeout(typeAnim,400);return;}
+    setTimeout(typeAnim,40);
+  }
+}
+setTimeout(typeAnim,1200);
+
+// ─── HOLOGRAPHIC PANEL ───
+function openHolo(){
+  document.getElementById('holo-panel').classList.add('open');
+  if(window.speechSynthesis){
+    const u=new SpeechSynthesisUtterance("Hello! Welcome to the portfolio of Balalakshmi V. She is currently pursuing B.Sc Artificial Intelligence and Data Science First Year at RD National College of Arts and Science.");
+    u.rate=.95;u.pitch=1.1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+}
+function closeHolo(){
+  document.getElementById('holo-panel').classList.remove('open');
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+}
+document.getElementById('holo-panel').addEventListener('click',function(e){
+  if(e.target===this)closeHolo();
+});
+
+// ─── HOBBY TOGGLE ───
+let hobbyTimers={};
+function toggleHobby(type){
+  const card=document.getElementById(type==='cricket'?'cricket-card':'shuttle-card');
+  const playing=card.classList.contains('playing');
+  document.querySelectorAll('.hobby-card').forEach(c=>c.classList.remove('playing'));
+  clearTimeout(hobbyTimers[type]);
+  if(!playing){
+    card.classList.add('playing');
+    hobbyTimers[type]=setTimeout(()=>card.classList.remove('playing'),3000);
+  }
+}
+
+// ─── CIRCULAR PROGRESS ANIMATION ───
+const circumference=2*Math.PI*54; // 339.29
+function animateCircles(){
+  document.querySelectorAll('.circ-fg').forEach(el=>{
+    const pct=parseFloat(el.dataset.pct)/100;
+    const offset=circumference-(pct*circumference);
+    el.style.strokeDashoffset=offset;
+  });
+}
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){animateCircles();observer.disconnect();}});
+},{threshold:.3});
+const acSec=document.getElementById('academic');
+if(acSec)observer.observe(acSec);
+
+// ─── BACKGROUND CANVAS ───
+const canvas=document.getElementById('bg-canvas');
+const ctx=canvas.getContext('2d');
+let W,H;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+resize();
+window.addEventListener('resize',resize);
+
+// Particles
+const PCOUNT=90;
+const particles=Array.from({length:PCOUNT},()=>({
+  x:Math.random()*2000,y:Math.random()*2000,
+  vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,
+  r:Math.random()*1.8+.3,
+  color:`hsl(${180+Math.random()*60},100%,${60+Math.random()*20}%)`,
+  alpha:Math.random()*.7+.1
+}));
+
+// Circuit lines
+const LINES=30;
+const circuitLines=Array.from({length:LINES},()=>({
+  x:Math.random()*2000,y:Math.random()*2000,
+  len:Math.random()*100+40,
+  dir:Math.floor(Math.random()*2),
+  alpha:Math.random()*.25+.05,
+  speed:(Math.random()*.3+.1)*(Math.random()<.5?1:-1)
+}));
+
+let mouseX=W/2,mouseY=H/2;
+document.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;});
+
+function drawFrame(){
+  ctx.clearRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle='rgba(0,180,220,0.06)';
+  ctx.lineWidth=1;
+  const gs=60;
+  for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Circuit lines
+  circuitLines.forEach(l=>{
+    l.x+=l.speed*(l.dir===0?1:0);
+    l.y+=l.speed*(l.dir===1?1:0);
+    if(l.x>W+200)l.x=-200;
+    if(l.x<-200)l.x=W+200;
+    if(l.y>H+200)l.y=-200;
+    if(l.y<-200)l.y=H+200;
+    ctx.strokeStyle=`rgba(0,212,255,${l.alpha})`;
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    if(l.dir===0){ctx.moveTo(l.x,l.y);ctx.lineTo(l.x+l.len,l.y);}
+    else{ctx.moveTo(l.x,l.y);ctx.lineTo(l.x,l.y+l.len);}
+    ctx.stroke();
+    // Node at end
+    ctx.beginPath();
+    ctx.arc(l.dir===0?l.x+l.len:l.x,l.dir===1?l.y+l.len:l.y,2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(0,255,247,${l.alpha*2})`;
+    ctx.fill();
+  });
+
+  // Particles
+  particles.forEach((p,i)=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color;
+    ctx.globalAlpha=p.alpha;
+    ctx.fill();
+    ctx.globalAlpha=1;
+    // Connect nearby
+    particles.slice(i+1,i+5).forEach(p2=>{
+      const dx=p.x-p2.x,dy=p.y-p2.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<80){
+        ctx.strokeStyle=`rgba(0,212,255,${.15*(1-dist/80)})`;
+        ctx.lineWidth=.5;
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+      }
+    });
+  });
+
+  // Mouse glow
+  const grd=ctx.createRadialGradient(mouseX,mouseY,0,mouseX,mouseY,220);
+  grd.addColorStop(0,'rgba(0,212,255,0.04)');
+  grd.addColorStop(1,'transparent');
+  ctx.fillStyle=grd;
+  ctx.fillRect(0,0,W,H);
+
+  requestAnimationFrame(drawFrame);
+}
+drawFrame();
+
+// ─── SCROLL REVEAL ───
+const revealEls=document.querySelectorAll('.glass-card,.timeline-item,.skill-chip');
+const revObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+    }
+  });
+},{threshold:.1});
+revealEls.forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(30px)';
+  el.style.transition='opacity .6s ease, transform .6s ease';
+  revObs.observe(el);
+});
+</script>
+</body>
+</html>
